@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Leaf } from 'lucide-react';
+import { Eye, EyeOff, Leaf, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
@@ -11,6 +11,7 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,13 +20,21 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setMessage('');
 
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        navigate('/dashboard');
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
+        // Navigate based on role
+        if (formData.email.includes('admin')) {
+          navigate('/admin-dashboard');
+        } else if (formData.email.includes('seller')) {
+          navigate('/seller-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        setError('Invalid email or password');
+        setError(result.message || 'Login failed');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -55,15 +64,22 @@ const Login: React.FC = () => {
             Welcome back!
           </h2>
           <p className="mt-2 text-gray-600">
-            Sign in to your account to continue shopping
+            Sign in to your account to continue
           </p>
         </div>
 
         <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {message && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
+                {message}
               </div>
             )}
 
@@ -166,7 +182,7 @@ const Login: React.FC = () => {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
           <div className="text-xs text-blue-700 space-y-1">
-            <p><strong>Buyer:</strong> buyer@demo.com (password: any)</p>
+            <p><strong>Customer:</strong> customer@demo.com (password: any)</p>
             <p><strong>Seller:</strong> seller@demo.com (password: any)</p>
             <p><strong>Admin:</strong> admin@demo.com (password: any)</p>
           </div>

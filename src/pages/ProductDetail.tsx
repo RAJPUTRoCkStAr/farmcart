@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Share2, MapPin, Truck, Shield, ArrowLeft } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Share2, MapPin, Truck, Shield, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,10 +12,10 @@ const ProductDetail: React.FC = () => {
   const { user } = useAuth();
   const [product, setProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
-    // Mock product data - in a real app, this would fetch from an API
+    // Mock product data with multiple images
     const mockProduct = {
       id: id,
       name: 'Organic Tomatoes',
@@ -23,7 +23,8 @@ const ProductDetail: React.FC = () => {
       images: [
         'https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1327368/pexels-photo-1327368.jpeg?auto=compress&cs=tinysrgb&w=800'
+        'https://images.pexels.com/photos/1327368/pexels-photo-1327368.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1327373/pexels-photo-1327373.jpeg?auto=compress&cs=tinysrgb&w=800'
       ],
       seller: {
         name: 'Green Valley Farm',
@@ -78,6 +79,22 @@ const ProductDetail: React.FC = () => {
     }
   };
 
+  const nextImage = () => {
+    if (product) {
+      setSelectedImageIndex((prev) => 
+        prev === product.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (product) {
+      setSelectedImageIndex((prev) => 
+        prev === 0 ? product.images.length - 1 : prev - 1
+      );
+    }
+  };
+
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -124,30 +141,62 @@ const ProductDetail: React.FC = () => {
       <div className="grid md:grid-cols-2 gap-12">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+          {/* Main Image */}
+          <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
             <img
-              src={product.images[selectedImage]}
+              src={product.images[selectedImageIndex]}
               alt={product.name}
               className="w-full h-full object-cover"
             />
+            
+            {/* Image Navigation */}
+            {product.images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all"
+                >
+                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                </button>
+              </>
+            )}
+
+            {/* Image Counter */}
+            {product.images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                {selectedImageIndex + 1} / {product.images.length}
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            {product.images.map((image: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`aspect-square overflow-hidden rounded-lg border-2 ${
-                  selectedImage === index ? 'border-green-500' : 'border-gray-200'
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`${product.name} ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+
+          {/* Thumbnail Images */}
+          {product.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {product.images.map((image: string, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`aspect-square overflow-hidden rounded-lg border-2 transition-all ${
+                    selectedImageIndex === index 
+                      ? 'border-green-500 ring-2 ring-green-200' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Info */}

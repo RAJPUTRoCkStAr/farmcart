@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Leaf, User, Store, Shield } from 'lucide-react';
+import { Eye, EyeOff, Leaf, User, Store, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register: React.FC = () => {
@@ -19,6 +19,7 @@ const Register: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -40,12 +42,25 @@ const Register: React.FC = () => {
       return;
     }
 
+    if (formData.role === 'seller' && (!formData.businessName || !formData.businessType)) {
+      setError('Business name and type are required for sellers');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const success = await register(formData);
-      if (success) {
-        navigate('/dashboard');
+      const result = await register(formData);
+      if (result.success) {
+        if (formData.role === 'seller') {
+          setSuccess(result.message || 'Registration successful! Your seller account is pending approval.');
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        setError('Registration failed. Please try again.');
+        setError(result.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -64,13 +79,13 @@ const Register: React.FC = () => {
   const roleOptions = [
     {
       value: 'buyer',
-      label: 'Buyer',
+      label: 'Customer',
       description: 'I want to buy fresh produce and handmade goods',
       icon: <User className="h-5 w-5" />
     },
     {
       value: 'seller',
-      label: 'Seller',
+      label: 'Seller/Farmer',
       description: 'I want to sell my products online',
       icon: <Store className="h-5 w-5" />
     }
@@ -97,8 +112,16 @@ const Register: React.FC = () => {
         <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                <span>{success}</span>
               </div>
             )}
 
@@ -213,6 +236,16 @@ const Register: React.FC = () => {
             {/* Seller-specific fields */}
             {formData.role === 'seller' && (
               <>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-sm font-medium text-blue-900">Seller Information</h3>
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    Your seller account will be reviewed by our admin team before approval. This process typically takes 1-2 business days.
+                  </p>
+                </div>
+
                 <div>
                   <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
                     Business/Farm Name *
