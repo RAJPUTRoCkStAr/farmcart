@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Leaf, User, Store, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Leaf, User, Store, Shield, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register: React.FC = () => {
@@ -125,44 +125,23 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Role Selection */}
+            {/* Role Selection Dropdown */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                 I want to join as a:
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {roleOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    className={`relative flex items-start p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${
-                      formData.role === option.value
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="role"
-                      value={option.value}
-                      checked={formData.role === option.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center">
-                      <div className={`p-2 rounded-lg mr-3 ${
-                        formData.role === option.value
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {option.icon}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{option.label}</div>
-                        <div className="text-sm text-gray-600">{option.description}</div>
-                      </div>
-                    </div>
-                  </label>
-                ))}
+              <div className="relative">
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                >
+                  <option value="buyer">Customer - I want to buy products</option>
+                  <option value="seller">Seller/Farmer - I want to sell products</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
@@ -266,21 +245,24 @@ const Register: React.FC = () => {
                   <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 mb-1">
                     Business Type *
                   </label>
-                  <select
-                    id="businessType"
-                    name="businessType"
-                    required
-                    value={formData.businessType}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">Select business type</option>
-                    <option value="farm">Farm</option>
-                    <option value="dairy">Dairy</option>
-                    <option value="handicrafts">Handicrafts</option>
-                    <option value="organic">Organic Products</option>
-                    <option value="other">Other</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      id="businessType"
+                      name="businessType"
+                      required
+                      value={formData.businessType}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                    >
+                      <option value="">Select business type</option>
+                      <option value="farm">Farm</option>
+                      <option value="dairy">Dairy</option>
+                      <option value="handicrafts">Handicrafts</option>
+                      <option value="organic">Organic Products</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
               </>
             )}

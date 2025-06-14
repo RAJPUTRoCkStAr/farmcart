@@ -1,11 +1,31 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Heart, MapPin, Clock, Star, Package, CreditCard, Truck, Eye } from 'lucide-react';
+import { ShoppingBag, Heart, MapPin, Clock, Star, Package, CreditCard, Truck, Eye, Plus, Save, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    label: '',
+    address: '',
+    isDefault: false
+  });
+  const [addresses, setAddresses] = useState([
+    {
+      id: 1,
+      label: 'Home',
+      address: '123 Green Street, Eco City, EC 12345',
+      isDefault: true
+    },
+    {
+      id: 2,
+      label: 'Office',
+      address: '456 Work Avenue, Business District, BD 67890',
+      isDefault: false
+    }
+  ]);
 
   const recentOrders = [
     {
@@ -88,21 +108,6 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const addresses = [
-    {
-      id: 1,
-      label: 'Home',
-      address: '123 Green Street, Eco City, EC 12345',
-      isDefault: true
-    },
-    {
-      id: 2,
-      label: 'Office',
-      address: '456 Work Avenue, Business District, BD 67890',
-      isDefault: false
-    }
-  ];
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
@@ -127,6 +132,43 @@ const Dashboard: React.FC = () => {
       default:
         return <Package className="h-4 w-4" />;
     }
+  };
+
+  const handleAddAddress = () => {
+    if (newAddress.label && newAddress.address) {
+      const newId = Math.max(...addresses.map(a => a.id)) + 1;
+      const addressToAdd = { ...newAddress, id: newId };
+      
+      if (newAddress.isDefault) {
+        // Set all other addresses to non-default
+        setAddresses(prev => prev.map(addr => ({ ...addr, isDefault: false })));
+      }
+      
+      setAddresses(prev => [...prev, addressToAdd]);
+      setNewAddress({ label: '', address: '', isDefault: false });
+      setShowAddAddress(false);
+    }
+  };
+
+  const handleSetDefault = (id: number) => {
+    setAddresses(prev => prev.map(addr => ({
+      ...addr,
+      isDefault: addr.id === id
+    })));
+  };
+
+  const handleDeleteAddress = (id: number) => {
+    setAddresses(prev => prev.filter(addr => addr.id !== id));
+  };
+
+  const handleReorder = (order: any) => {
+    // Add all items from the order to cart
+    console.log('Reordering items:', order.items);
+    alert(`Added ${order.items.length} items to cart for reorder!`);
+  };
+
+  const handleViewOrderDetails = (order: any) => {
+    alert(`Viewing details for order ${order.id}\n\nItems: ${order.items.map(item => `${item.name} x${item.quantity}`).join(', ')}\nTotal: ₹${order.total}\nStatus: ${order.status}`);
   };
 
   const tabs = [
@@ -334,12 +376,18 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <div className="flex space-x-3">
-                      <button className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1">
+                      <button 
+                        onClick={() => handleViewOrderDetails(order)}
+                        className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                      >
                         <Eye className="h-4 w-4" />
                         <span>View Details</span>
                       </button>
                       {order.status === 'delivered' && (
-                        <button className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
+                        <button 
+                          onClick={() => handleReorder(order)}
+                          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
+                        >
                           Reorder
                         </button>
                       )}
@@ -464,18 +512,85 @@ const Dashboard: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Saved Addresses</h3>
-                <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors">
-                  Add New Address
+                <button 
+                  onClick={() => setShowAddAddress(true)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add New Address</span>
                 </button>
               </div>
+
+              {/* Add New Address Form */}
+              {showAddAddress && (
+                <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <h4 className="font-medium text-gray-900 mb-4">Add New Address</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Label (e.g., Home, Office)
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.label}
+                        onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter address label"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Complete Address
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.address}
+                        onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter complete address"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={newAddress.isDefault}
+                        onChange={(e) => setNewAddress({ ...newAddress, isDefault: e.target.checked })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Set as default address</span>
+                    </label>
+                  </div>
+                  <div className="flex space-x-2 mt-4">
+                    <button
+                      onClick={handleAddAddress}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>Save Address</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddAddress(false);
+                        setNewAddress({ label: '', address: '', isDefault: false });
+                      }}
+                      className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 {addresses.map((address) => (
                   <div key={address.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
+                      <div className="flex items-start space-x-3 flex-1">
                         <MapPin className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
-                        <div>
+                        <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <h4 className="font-medium text-gray-900">{address.label}</h4>
                             {address.isDefault && (
@@ -487,11 +602,22 @@ const Dashboard: React.FC = () => {
                           <p className="text-gray-600">{address.address}</p>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 ml-4">
+                        {!address.isDefault && (
+                          <button
+                            onClick={() => handleSetDefault(address.id)}
+                            className="text-green-600 hover:text-green-700 text-sm"
+                          >
+                            Set Default
+                          </button>
+                        )}
                         <button className="text-blue-600 hover:text-blue-700 text-sm">
                           Edit
                         </button>
-                        <button className="text-red-600 hover:text-red-700 text-sm">
+                        <button
+                          onClick={() => handleDeleteAddress(address.id)}
+                          className="text-red-600 hover:text-red-700 text-sm"
+                        >
                           Delete
                         </button>
                       </div>

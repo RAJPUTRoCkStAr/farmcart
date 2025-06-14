@@ -47,7 +47,7 @@ const SellerDashboard: React.FC = () => {
     }
   ];
 
-  const products = [
+  const [products, setProducts] = useState([
     {
       id: '1',
       name: 'Organic Tomatoes',
@@ -84,9 +84,9 @@ const SellerDashboard: React.FC = () => {
       description: 'Crisp organic lettuce perfect for salads',
       organic: true
     }
-  ];
+  ]);
 
-  const recentOrders = [
+  const [recentOrders, setRecentOrders] = useState([
     {
       id: 'ORD001',
       customer: 'Priya Sharma',
@@ -120,7 +120,7 @@ const SellerDashboard: React.FC = () => {
       customerPhone: '+91 98765 43212',
       deliveryAddress: '789 Red Road, Pune'
     }
-  ];
+  ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -142,22 +142,38 @@ const SellerDashboard: React.FC = () => {
   };
 
   const handleAddProduct = () => {
-    // In a real app, this would submit to an API
-    console.log('Adding product:', newProduct);
-    setShowAddProduct(false);
-    setNewProduct({
-      name: '',
-      price: '',
-      category: '',
-      description: '',
-      stock: '',
-      organic: false,
-      images: []
-    });
+    if (newProduct.name && newProduct.price && newProduct.category && newProduct.description && newProduct.stock) {
+      const productToAdd = {
+        id: Date.now().toString(),
+        name: newProduct.name,
+        price: parseInt(newProduct.price),
+        stock: parseInt(newProduct.stock),
+        sold: 0,
+        status: 'pending',
+        category: newProduct.category,
+        images: newProduct.images.length > 0 ? newProduct.images : ['https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=150'],
+        description: newProduct.description,
+        organic: newProduct.organic
+      };
+      
+      setProducts(prev => [...prev, productToAdd]);
+      setShowAddProduct(false);
+      setNewProduct({
+        name: '',
+        price: '',
+        category: '',
+        description: '',
+        stock: '',
+        organic: false,
+        images: []
+      });
+      alert('Product submitted for admin review!');
+    } else {
+      alert('Please fill in all required fields');
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // In a real app, this would upload to a server
     const files = e.target.files;
     if (files) {
       const imageUrls = Array.from(files).map(file => URL.createObjectURL(file));
@@ -176,8 +192,10 @@ const SellerDashboard: React.FC = () => {
   };
 
   const updateOrderStatus = (orderId: string, newStatus: string) => {
-    // In a real app, this would update the order status via API
-    console.log(`Updating order ${orderId} to status: ${newStatus}`);
+    setRecentOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+    alert(`Order ${orderId} status updated to ${newStatus}`);
   };
 
   const tabs = [
@@ -595,7 +613,7 @@ const SellerDashboard: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Images *
+                    Product Images
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     <div className="text-center">

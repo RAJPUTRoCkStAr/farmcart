@@ -16,7 +16,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string, role?: string) => Promise<{ success: boolean; message?: string }>;
   register: (userData: any) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -36,26 +36,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (email: string, password: string, role?: string): Promise<{ success: boolean; message?: string }> => {
     // Mock login with different user types
     let mockUser: User;
     
-    if (email.includes('admin')) {
+    // Admin login requires special access code
+    if (role === 'admin') {
+      if (password !== 'admin123secure') {
+        return {
+          success: false,
+          message: 'Invalid admin credentials. Access denied.'
+        };
+      }
       mockUser = {
         id: 'admin-1',
-        name: 'Admin User',
+        name: 'System Administrator',
         email: email,
         role: 'admin',
         isApproved: true,
         canSell: false
       };
-    } else if (email.includes('seller')) {
+    } else if (role === 'seller' || email.includes('seller')) {
       mockUser = {
         id: 'seller-1',
         name: 'John Farmer',
         email: email,
         role: 'seller',
-        isApproved: true, // For demo, set to true. In real app, this would be checked
+        isApproved: true,
         canSell: true,
         businessName: 'Green Valley Farm',
         businessType: 'farm',
@@ -95,8 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       name: userData.name,
       email: userData.email,
       role: userData.role || 'buyer',
-      isApproved: userData.role === 'seller' ? false : true, // Sellers need approval
-      canSell: userData.role === 'seller' ? false : false, // Will be set to true after approval
+      isApproved: userData.role === 'seller' ? false : true,
+      canSell: userData.role === 'seller' ? false : false,
       businessName: userData.businessName,
       businessType: userData.businessType,
       phone: userData.phone,

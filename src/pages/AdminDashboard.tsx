@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Package, ShoppingBag, TrendingUp, CheckCircle, XCircle, Eye, UserCheck, UserX, AlertTriangle } from 'lucide-react';
+import { Users, Package, ShoppingBag, TrendingUp, CheckCircle, XCircle, Eye, UserCheck, UserX, AlertTriangle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const AdminDashboard: React.FC = () => {
@@ -37,7 +37,7 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
-  const pendingProducts = [
+  const [pendingProducts, setPendingProducts] = useState([
     {
       id: '1',
       name: 'Organic Honey',
@@ -45,7 +45,8 @@ const AdminDashboard: React.FC = () => {
       category: 'Dairy',
       price: 450,
       submittedDate: '2025-01-15',
-      image: 'https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=150'
+      image: 'https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=150',
+      description: 'Pure organic honey from wildflowers'
     },
     {
       id: '2',
@@ -54,7 +55,8 @@ const AdminDashboard: React.FC = () => {
       category: 'Handmade',
       price: 800,
       submittedDate: '2025-01-14',
-      image: 'https://images.pexels.com/photos/1123767/pexels-photo-1123767.jpeg?auto=compress&cs=tinysrgb&w=150'
+      image: 'https://images.pexels.com/photos/1123767/pexels-photo-1123767.jpeg?auto=compress&cs=tinysrgb&w=150',
+      description: 'Beautiful handcrafted pottery set'
     },
     {
       id: '3',
@@ -63,11 +65,12 @@ const AdminDashboard: React.FC = () => {
       category: 'Vegetables',
       price: 120,
       submittedDate: '2025-01-13',
-      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=150'
+      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=150',
+      description: 'Fresh organic mushrooms'
     }
-  ];
+  ]);
 
-  const pendingSellers = [
+  const [pendingSellers, setPendingSellers] = useState([
     {
       id: '1',
       name: 'Ramesh Kumar',
@@ -76,7 +79,8 @@ const AdminDashboard: React.FC = () => {
       businessType: 'Farm',
       submittedDate: '2025-01-15',
       documents: 3,
-      canSell: false
+      canSell: false,
+      email: 'ramesh@example.com'
     },
     {
       id: '2',
@@ -86,11 +90,12 @@ const AdminDashboard: React.FC = () => {
       businessType: 'Handicrafts',
       submittedDate: '2025-01-14',
       documents: 4,
-      canSell: false
+      canSell: false,
+      email: 'priya@example.com'
     }
-  ];
+  ]);
 
-  const allUsers = [
+  const [allUsers, setAllUsers] = useState([
     {
       id: '1',
       name: 'Anita Patel',
@@ -131,7 +136,7 @@ const AdminDashboard: React.FC = () => {
       canSell: false,
       totalOrders: 3
     }
-  ];
+  ]);
 
   const recentOrders = [
     {
@@ -178,8 +183,53 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleToggleSellerPermission = (userId: string, currentCanSell: boolean) => {
-    // In a real app, this would make an API call
-    console.log(`Toggling seller permission for user ${userId} from ${currentCanSell} to ${!currentCanSell}`);
+    setAllUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, canSell: !currentCanSell } : user
+    ));
+    alert(`Seller permission ${!currentCanSell ? 'granted' : 'revoked'} for user ${userId}`);
+  };
+
+  const handleSuspendUser = (userId: string) => {
+    setAllUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, status: user.status === 'active' ? 'suspended' : 'active' } : user
+    ));
+    alert(`User ${userId} has been suspended`);
+  };
+
+  const handleViewProfile = (user: any) => {
+    alert(`Viewing profile for ${user.name}\n\nEmail: ${user.email}\nRole: ${user.role}\nJoin Date: ${user.joinDate}\nStatus: ${user.status}`);
+  };
+
+  const handleProductAction = (productId: string, action: 'approve' | 'reject' | 'review') => {
+    const product = pendingProducts.find(p => p.id === productId);
+    if (action === 'review') {
+      alert(`Reviewing product: ${product?.name}\n\nSeller: ${product?.seller}\nCategory: ${product?.category}\nPrice: ₹${product?.price}\nDescription: ${product?.description}`);
+    } else if (action === 'approve') {
+      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      alert(`Product "${product?.name}" has been approved and is now live!`);
+    } else if (action === 'reject') {
+      const reason = prompt('Please provide a reason for rejection:');
+      if (reason) {
+        setPendingProducts(prev => prev.filter(p => p.id !== productId));
+        alert(`Product "${product?.name}" has been rejected. Reason: ${reason}`);
+      }
+    }
+  };
+
+  const handleSellerAction = (sellerId: string, action: 'approve' | 'reject' | 'review') => {
+    const seller = pendingSellers.find(s => s.id === sellerId);
+    if (action === 'review') {
+      alert(`Reviewing seller: ${seller?.name}\n\nBusiness: ${seller?.businessName}\nLocation: ${seller?.location}\nType: ${seller?.businessType}\nDocuments: ${seller?.documents} uploaded`);
+    } else if (action === 'approve') {
+      setPendingSellers(prev => prev.filter(s => s.id !== sellerId));
+      alert(`Seller "${seller?.name}" has been approved and can now start selling!`);
+    } else if (action === 'reject') {
+      const reason = prompt('Please provide a reason for rejection:');
+      if (reason) {
+        setPendingSellers(prev => prev.filter(s => s.id !== sellerId));
+        alert(`Seller "${seller?.name}" has been rejected. Reason: ${reason}`);
+      }
+    }
   };
 
   const tabs = [
@@ -250,12 +300,12 @@ const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                     <h4 className="font-medium text-yellow-800 mb-2">Product Approvals</h4>
-                    <p className="text-2xl font-bold text-yellow-900">156</p>
+                    <p className="text-2xl font-bold text-yellow-900">{pendingProducts.length}</p>
                     <p className="text-sm text-yellow-700">Products awaiting review</p>
                   </div>
                   <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                     <h4 className="font-medium text-blue-800 mb-2">Seller Verification</h4>
-                    <p className="text-2xl font-bold text-blue-900">23</p>
+                    <p className="text-2xl font-bold text-blue-900">{pendingSellers.length}</p>
                     <p className="text-sm text-blue-700">New seller applications</p>
                   </div>
                   <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
@@ -412,11 +462,17 @@ const AdminDashboard: React.FC = () => {
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button className="text-blue-600 hover:text-blue-900">
+                          <button 
+                            onClick={() => handleViewProfile(user)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
                             View Profile
                           </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            Suspend
+                          <button 
+                            onClick={() => handleSuspendUser(user.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            {user.status === 'active' ? 'Suspend' : 'Activate'}
                           </button>
                         </td>
                       </tr>
@@ -454,17 +510,27 @@ const AdminDashboard: React.FC = () => {
                           <span className="text-sm text-gray-500">Price: ₹{product.price}</span>
                           <span className="text-sm text-gray-500">Submitted: {product.submittedDate}</span>
                         </div>
+                        <p className="text-sm text-gray-600 mt-1">{product.description}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleProductAction(product.id, 'review')}
+                          className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                        >
                           <Eye className="h-4 w-4" />
                           <span>Review</span>
                         </button>
-                        <button className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleProductAction(product.id, 'approve')}
+                          className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                        >
                           <CheckCircle className="h-4 w-4" />
                           <span>Approve</span>
                         </button>
-                        <button className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleProductAction(product.id, 'reject')}
+                          className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1"
+                        >
                           <XCircle className="h-4 w-4" />
                           <span>Reject</span>
                         </button>
@@ -499,6 +565,7 @@ const AdminDashboard: React.FC = () => {
                           <span className="text-sm text-gray-500">Documents: {seller.documents}</span>
                           <span className="text-sm text-gray-500">Applied: {seller.submittedDate}</span>
                         </div>
+                        <p className="text-sm text-gray-500 mt-1">Email: {seller.email}</p>
                         <div className="mt-2">
                           <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
                             seller.canSell ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -518,15 +585,24 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleSellerAction(seller.id, 'review')}
+                          className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                        >
                           <Eye className="h-4 w-4" />
                           <span>Review</span>
                         </button>
-                        <button className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleSellerAction(seller.id, 'approve')}
+                          className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                        >
                           <CheckCircle className="h-4 w-4" />
                           <span>Approve</span>
                         </button>
-                        <button className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1">
+                        <button 
+                          onClick={() => handleSellerAction(seller.id, 'reject')}
+                          className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1"
+                        >
                           <XCircle className="h-4 w-4" />
                           <span>Reject</span>
                         </button>
@@ -593,10 +669,16 @@ const AdminDashboard: React.FC = () => {
                           {order.date}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-green-600 hover:text-green-900 mr-3">
+                          <button 
+                            onClick={() => alert(`Viewing details for order ${order.id}`)}
+                            className="text-green-600 hover:text-green-900 mr-3"
+                          >
                             View Details
                           </button>
-                          <button className="text-blue-600 hover:text-blue-900">
+                          <button 
+                            onClick={() => alert(`Managing order ${order.id}`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
                             Manage
                           </button>
                         </td>

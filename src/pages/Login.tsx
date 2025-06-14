@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Leaf, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Leaf, AlertCircle, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    role: 'buyer'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,12 +24,12 @@ const Login: React.FC = () => {
     setMessage('');
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password, formData.role);
       if (result.success) {
         // Navigate based on role
-        if (formData.email.includes('admin')) {
+        if (formData.role === 'admin') {
           navigate('/admin-dashboard');
-        } else if (formData.email.includes('seller')) {
+        } else if (formData.role === 'seller') {
           navigate('/seller-dashboard');
         } else {
           navigate('/dashboard');
@@ -43,7 +44,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -82,6 +83,27 @@ const Login: React.FC = () => {
                 {message}
               </div>
             )}
+
+            {/* Role Selection */}
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Login as
+              </label>
+              <div className="relative">
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
+                >
+                  <option value="buyer">Customer</option>
+                  <option value="seller">Seller/Farmer</option>
+                  <option value="admin">System Administrator</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -127,6 +149,14 @@ const Login: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            {formData.role === 'admin' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-700">
+                  <strong>Admin Access:</strong> This is a restricted area. Only authorized personnel should access this section.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -184,7 +214,7 @@ const Login: React.FC = () => {
           <div className="text-xs text-blue-700 space-y-1">
             <p><strong>Customer:</strong> customer@demo.com (password: any)</p>
             <p><strong>Seller:</strong> seller@demo.com (password: any)</p>
-            <p><strong>Admin:</strong> admin@demo.com (password: any)</p>
+            <p><strong>Admin:</strong> admin@demo.com (password: admin123secure)</p>
           </div>
         </div>
       </div>

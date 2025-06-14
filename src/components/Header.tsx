@@ -49,6 +49,9 @@ const Header: React.FC = () => {
     'Handmade'
   ];
 
+  // Don't show shopping features for admin users
+  const showShoppingFeatures = !user || user.role !== 'admin';
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,29 +64,31 @@ const Header: React.FC = () => {
             <span className="text-2xl font-bold text-green-600">FarmCart</span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <form onSubmit={handleSearch} className="w-full relative">
-              <input
-                type="text"
-                placeholder="Search for fresh produce, handmade goods..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
-          </div>
+          {/* Search Bar - Desktop - Only show for non-admin users */}
+          {showShoppingFeatures && (
+            <div className="hidden md:flex flex-1 max-w-lg mx-8">
+              <form onSubmit={handleSearch} className="w-full relative">
+                <input
+                  type="text"
+                  placeholder="Search for fresh produce, handmade goods..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Navigation Icons */}
           <div className="flex items-center space-x-4">
             {/* Wishlist - Only show for non-admin users */}
-            {user?.role !== 'admin' && (
+            {showShoppingFeatures && (
               <Link
                 to="/wishlist"
                 className="relative p-2 text-gray-600 hover:text-green-600 transition-colors"
@@ -98,7 +103,7 @@ const Header: React.FC = () => {
             )}
 
             {/* Cart - Only show for non-admin users */}
-            {user?.role !== 'admin' && (
+            {showShoppingFeatures && (
               <Link
                 to="/cart"
                 className="relative p-2 text-gray-600 hover:text-green-600 transition-colors"
@@ -139,7 +144,7 @@ const Header: React.FC = () => {
                     >
                       Profile Settings
                     </Link>
-                    {user.role !== 'admin' && (
+                    {showShoppingFeatures && (
                       <>
                         <Link
                           to="/wishlist"
@@ -184,18 +189,20 @@ const Header: React.FC = () => {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile Menu Button - Only show for non-admin users */}
+            {showShoppingFeatures && (
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 text-gray-600"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Categories - Desktop - Hide for admin users */}
-        {user?.role !== 'admin' && (
+        {/* Categories - Desktop - Only show for non-admin users */}
+        {showShoppingFeatures && (
           <div className="hidden md:flex items-center space-x-8 py-3 border-t border-gray-100">
             <Link
               to="/products"
@@ -216,8 +223,8 @@ const Header: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile Menu - Hide for admin users */}
-      {isMenuOpen && user?.role !== 'admin' && (
+      {/* Mobile Menu - Only show for non-admin users */}
+      {isMenuOpen && showShoppingFeatures && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-2">
             <form onSubmit={handleSearch} className="mb-4">
