@@ -157,6 +157,18 @@ const SellerDashboard: React.FC = () => {
       };
       
       setProducts(prev => [...prev, productToAdd]);
+      
+      // Store in localStorage to simulate sending to admin
+      const pendingProducts = JSON.parse(localStorage.getItem('pendingProducts') || '[]');
+      const adminProduct = {
+        ...productToAdd,
+        seller: user?.businessName || user?.name || 'Unknown Seller',
+        submittedDate: new Date().toISOString().split('T')[0],
+        image: productToAdd.images[0]
+      };
+      pendingProducts.push(adminProduct);
+      localStorage.setItem('pendingProducts', JSON.stringify(pendingProducts));
+      
       setShowAddProduct(false);
       setNewProduct({
         name: '',
@@ -167,7 +179,7 @@ const SellerDashboard: React.FC = () => {
         organic: false,
         images: []
       });
-      alert('Product submitted for admin review!');
+      alert('Product submitted for admin review! You can track its status in the Products tab.');
     } else {
       alert('Please fill in all required fields');
     }
@@ -192,10 +204,13 @@ const SellerDashboard: React.FC = () => {
   };
 
   const updateOrderStatus = (orderId: string, newStatus: string) => {
-    setRecentOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    alert(`Order ${orderId} status updated to ${newStatus}`);
+    const confirmMessage = `Are you sure you want to mark order ${orderId} as ${newStatus}?`;
+    if (window.confirm(confirmMessage)) {
+      setRecentOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+      alert(`Order ${orderId} status updated to ${newStatus}`);
+    }
   };
 
   const tabs = [

@@ -2,27 +2,41 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Heart, MapPin, Clock, Star, Package, CreditCard, Truck, Eye, Plus, Save, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({
     label: '',
+    name: '',
     address: '',
+    city: '',
+    state: '',
+    pincode: '',
     isDefault: false
   });
   const [addresses, setAddresses] = useState([
     {
       id: 1,
       label: 'Home',
-      address: '123 Green Street, Eco City, EC 12345',
+      name: 'John Doe',
+      address: '123 Green Street',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400001',
       isDefault: true
     },
     {
       id: 2,
       label: 'Office',
-      address: '456 Work Avenue, Business District, BD 67890',
+      name: 'John Doe',
+      address: '456 Work Avenue',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400002',
       isDefault: false
     }
   ]);
@@ -32,40 +46,40 @@ const Dashboard: React.FC = () => {
       id: 'ORD001',
       date: '2025-01-15',
       items: [
-        { name: 'Organic Tomatoes', quantity: 2, price: 80 },
-        { name: 'Fresh Carrots', quantity: 1, price: 50 }
+        { id: '1', name: 'Organic Tomatoes', quantity: 2, price: 80, image: 'https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=150', seller: 'Green Valley Farm' },
+        { id: '2', name: 'Fresh Carrots', quantity: 1, price: 50, image: 'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=150', seller: 'Green Valley Farm' }
       ],
       total: 210,
       status: 'delivered',
       seller: 'Green Valley Farm',
       paymentMethod: 'UPI',
-      deliveryAddress: '123 Green Street, Eco City',
+      deliveryAddress: '123 Green Street, Mumbai, Maharashtra - 400001',
       trackingId: 'TRK001234'
     },
     {
       id: 'ORD002',
       date: '2025-01-12',
       items: [
-        { name: 'Fresh Mangoes', quantity: 3, price: 120 }
+        { id: '3', name: 'Fresh Mangoes', quantity: 3, price: 120, image: 'https://images.pexels.com/photos/918327/pexels-photo-918327.jpeg?auto=compress&cs=tinysrgb&w=150', seller: 'Sunshine Orchards' }
       ],
       total: 360,
       status: 'in-transit',
       seller: 'Sunshine Orchards',
       paymentMethod: 'Card',
-      deliveryAddress: '123 Green Street, Eco City',
+      deliveryAddress: '123 Green Street, Mumbai, Maharashtra - 400001',
       trackingId: 'TRK001235'
     },
     {
       id: 'ORD003',
       date: '2025-01-10',
       items: [
-        { name: 'Farm Fresh Milk', quantity: 2, price: 60 }
+        { id: '4', name: 'Farm Fresh Milk', quantity: 2, price: 60, image: 'https://images.pexels.com/photos/416088/pexels-photo-416088.jpeg?auto=compress&cs=tinysrgb&w=150', seller: 'Happy Cow Dairy' }
       ],
       total: 120,
       status: 'processing',
       seller: 'Happy Cow Dairy',
       paymentMethod: 'COD',
-      deliveryAddress: '123 Green Street, Eco City',
+      deliveryAddress: '123 Green Street, Mumbai, Maharashtra - 400001',
       trackingId: 'TRK001236'
     }
   ];
@@ -135,7 +149,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleAddAddress = () => {
-    if (newAddress.label && newAddress.address) {
+    if (newAddress.label && newAddress.name && newAddress.address && newAddress.city && newAddress.state && newAddress.pincode) {
       const newId = Math.max(...addresses.map(a => a.id)) + 1;
       const addressToAdd = { ...newAddress, id: newId };
       
@@ -145,8 +159,10 @@ const Dashboard: React.FC = () => {
       }
       
       setAddresses(prev => [...prev, addressToAdd]);
-      setNewAddress({ label: '', address: '', isDefault: false });
+      setNewAddress({ label: '', name: '', address: '', city: '', state: '', pincode: '', isDefault: false });
       setShowAddAddress(false);
+    } else {
+      alert('Please fill in all required fields');
     }
   };
 
@@ -163,12 +179,25 @@ const Dashboard: React.FC = () => {
 
   const handleReorder = (order: any) => {
     // Add all items from the order to cart
-    console.log('Reordering items:', order.items);
+    order.items.forEach((item: any) => {
+      addToCart(item, item.quantity);
+    });
     alert(`Added ${order.items.length} items to cart for reorder!`);
   };
 
   const handleViewOrderDetails = (order: any) => {
-    alert(`Viewing details for order ${order.id}\n\nItems: ${order.items.map(item => `${item.name} x${item.quantity}`).join(', ')}\nTotal: ₹${order.total}\nStatus: ${order.status}`);
+    const itemsList = order.items.map((item: any) => `${item.name} x${item.quantity} (₹${item.price * item.quantity})`).join('\n');
+    alert(`Order Details - ${order.id}
+
+Items:
+${itemsList}
+
+Total: ₹${order.total}
+Status: ${order.status}
+Payment: ${order.paymentMethod}
+Delivery Address: ${order.deliveryAddress}
+Tracking ID: ${order.trackingId}
+Order Date: ${order.date}`);
   };
 
   const tabs = [
@@ -528,7 +557,7 @@ const Dashboard: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Label (e.g., Home, Office)
+                        Label (e.g., Home, Office) *
                       </label>
                       <input
                         type="text"
@@ -540,14 +569,62 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Complete Address
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.name}
+                        onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address *
                       </label>
                       <input
                         type="text"
                         value={newAddress.address}
                         onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Enter complete address"
+                        placeholder="House/Flat No., Street, Area"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.city}
+                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter city"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        State *
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.state}
+                        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter state"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pincode *
+                      </label>
+                      <input
+                        type="text"
+                        value={newAddress.pincode}
+                        onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Enter pincode"
                       />
                     </div>
                   </div>
@@ -573,7 +650,7 @@ const Dashboard: React.FC = () => {
                     <button
                       onClick={() => {
                         setShowAddAddress(false);
-                        setNewAddress({ label: '', address: '', isDefault: false });
+                        setNewAddress({ label: '', name: '', address: '', city: '', state: '', pincode: '', isDefault: false });
                       }}
                       className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
                     >
@@ -599,7 +676,9 @@ const Dashboard: React.FC = () => {
                               </span>
                             )}
                           </div>
+                          <p className="text-gray-900 font-medium">{address.name}</p>
                           <p className="text-gray-600">{address.address}</p>
+                          <p className="text-gray-600">{address.city}, {address.state} - {address.pincode}</p>
                         </div>
                       </div>
                       <div className="flex space-x-2 ml-4">

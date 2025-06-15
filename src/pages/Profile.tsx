@@ -16,20 +16,32 @@ const Profile: React.FC = () => {
     {
       id: 1,
       label: 'Home',
-      address: '123 Green Street, Eco City, EC 12345',
+      name: 'John Doe',
+      address: '123 Green Street',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400001',
       isDefault: true
     },
     {
       id: 2,
       label: 'Office',
-      address: '456 Work Avenue, Business District, BD 67890',
+      name: 'John Doe',
+      address: '456 Work Avenue',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      pincode: '400002',
       isDefault: false
     }
   ]);
 
   const [newAddress, setNewAddress] = useState({
     label: '',
+    name: '',
     address: '',
+    city: '',
+    state: '',
+    pincode: '',
     isDefault: false
   });
 
@@ -44,17 +56,19 @@ const Profile: React.FC = () => {
   };
 
   const handleAddAddress = () => {
-    if (newAddress.label && newAddress.address) {
+    if (newAddress.label && newAddress.name && newAddress.address && newAddress.city && newAddress.state && newAddress.pincode) {
       const newId = Math.max(...addresses.map(a => a.id)) + 1;
       setAddresses([...addresses, { ...newAddress, id: newId }]);
-      setNewAddress({ label: '', address: '', isDefault: false });
+      setNewAddress({ label: '', name: '', address: '', city: '', state: '', pincode: '', isDefault: false });
       setShowAddAddress(false);
+    } else {
+      alert('Please fill in all required fields');
     }
   };
 
-  const handleEditAddress = (id: number, updatedAddress: string) => {
+  const handleEditAddress = (id: number, updatedAddress: any) => {
     setAddresses(addresses.map(addr => 
-      addr.id === id ? { ...addr, address: updatedAddress } : addr
+      addr.id === id ? { ...addr, ...updatedAddress } : addr
     ));
     setEditingAddress(null);
   };
@@ -197,7 +211,7 @@ const Profile: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Label (e.g., Home, Office)
+                    Label (e.g., Home, Office) *
                   </label>
                   <input
                     type="text"
@@ -209,14 +223,62 @@ const Profile: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Complete Address
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.name}
+                    onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter full name"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address *
                   </label>
                   <input
                     type="text"
                     value={newAddress.address}
                     onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Enter complete address"
+                    placeholder="House/Flat No., Street, Area"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    State *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.state}
+                    onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter state"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pincode *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.pincode}
+                    onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter pincode"
                   />
                 </div>
               </div>
@@ -241,7 +303,7 @@ const Profile: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowAddAddress(false);
-                    setNewAddress({ label: '', address: '', isDefault: false });
+                    setNewAddress({ label: '', name: '', address: '', city: '', state: '', pincode: '', isDefault: false });
                   }}
                   className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >
@@ -267,28 +329,9 @@ const Profile: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      {editingAddress === address.id ? (
-                        <div className="flex space-x-2 mt-2">
-                          <input
-                            type="text"
-                            defaultValue={address.address}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                handleEditAddress(address.id, e.currentTarget.value);
-                              }
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          />
-                          <button
-                            onClick={() => setEditingAddress(null)}
-                            className="text-gray-600 hover:text-gray-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600">{address.address}</p>
-                      )}
+                      <p className="text-gray-900 font-medium">{address.name}</p>
+                      <p className="text-gray-600">{address.address}</p>
+                      <p className="text-gray-600">{address.city}, {address.state} - {address.pincode}</p>
                     </div>
                   </div>
                   <div className="flex space-x-2 ml-4">
@@ -300,10 +343,7 @@ const Profile: React.FC = () => {
                         Set Default
                       </button>
                     )}
-                    <button
-                      onClick={() => setEditingAddress(address.id)}
-                      className="text-blue-600 hover:text-blue-700 text-sm"
-                    >
+                    <button className="text-blue-600 hover:text-blue-700 text-sm">
                       Edit
                     </button>
                     <button

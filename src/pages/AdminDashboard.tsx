@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Package, ShoppingBag, TrendingUp, CheckCircle, XCircle, Eye, UserCheck, UserX, AlertTriangle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,38 +37,23 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
-  const [pendingProducts, setPendingProducts] = useState([
-    {
-      id: '1',
-      name: 'Organic Honey',
-      seller: 'Sweet Bee Farm',
-      category: 'Dairy',
-      price: 450,
-      submittedDate: '2025-01-15',
-      image: 'https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=150',
-      description: 'Pure organic honey from wildflowers'
-    },
-    {
-      id: '2',
-      name: 'Handmade Pottery Set',
-      seller: 'Clay Works Studio',
-      category: 'Handmade',
-      price: 800,
-      submittedDate: '2025-01-14',
-      image: 'https://images.pexels.com/photos/1123767/pexels-photo-1123767.jpeg?auto=compress&cs=tinysrgb&w=150',
-      description: 'Beautiful handcrafted pottery set'
-    },
-    {
-      id: '3',
-      name: 'Fresh Mushrooms',
-      seller: 'Forest Farm',
-      category: 'Vegetables',
-      price: 120,
-      submittedDate: '2025-01-13',
-      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=150',
-      description: 'Fresh organic mushrooms'
-    }
-  ]);
+  const [pendingProducts, setPendingProducts] = useState([]);
+
+  // Load pending products from localStorage
+  useEffect(() => {
+    const loadPendingProducts = () => {
+      const stored = localStorage.getItem('pendingProducts');
+      if (stored) {
+        setPendingProducts(JSON.parse(stored));
+      }
+    };
+    
+    loadPendingProducts();
+    
+    // Set up interval to check for new products
+    const interval = setInterval(loadPendingProducts, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [pendingSellers, setPendingSellers] = useState([
     {
@@ -76,7 +61,7 @@ const AdminDashboard: React.FC = () => {
       name: 'Ramesh Kumar',
       businessName: 'Kumar Organic Farm',
       location: 'Punjab, India',
-      businessType: 'Farm',
+      businessType: 'farm',
       submittedDate: '2025-01-15',
       documents: 3,
       canSell: false,
@@ -87,7 +72,7 @@ const AdminDashboard: React.FC = () => {
       name: 'Priya Sharma',
       businessName: 'Artisan Crafts',
       location: 'Rajasthan, India',
-      businessType: 'Handicrafts',
+      businessType: 'handicrafts',
       submittedDate: '2025-01-14',
       documents: 4,
       canSell: false,
@@ -201,16 +186,29 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleProductAction = (productId: string, action: 'approve' | 'reject' | 'review') => {
-    const product = pendingProducts.find(p => p.id === productId);
+    const product = pendingProducts.find((p: any) => p.id === productId);
     if (action === 'review') {
       alert(`Reviewing product: ${product?.name}\n\nSeller: ${product?.seller}\nCategory: ${product?.category}\nPrice: ₹${product?.price}\nDescription: ${product?.description}`);
     } else if (action === 'approve') {
-      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      // Remove from pending products
+      const updatedPending = pendingProducts.filter((p: any) => p.id !== productId);
+      setPendingProducts(updatedPending);
+      localStorage.setItem('pendingProducts', JSON.stringify(updatedPending));
+      
+      // Add to approved products (you could store this in another localStorage key)
+      const approvedProducts = JSON.parse(localStorage.getItem('approvedProducts') || '[]');
+      approvedProducts.push({ ...product, status: 'approved', approvedDate: new Date().toISOString().split('T')[0] });
+      localStorage.setItem('approvedProducts', JSON.stringify(approvedProducts));
+      
       alert(`Product "${product?.name}" has been approved and is now live!`);
     } else if (action === 'reject') {
       const reason = prompt('Please provide a reason for rejection:');
       if (reason) {
-        setPendingProducts(prev => prev.filter(p => p.id !== productId));
+        // Remove from pending products
+        const updatedPending = pendingProducts.filter((p: any) => p.id !== productId);
+        setPendingProducts(updatedPending);
+        localStorage.setItem('pendingProducts', JSON.stringify(updatedPending));
+        
         alert(`Product "${product?.name}" has been rejected. Reason: ${reason}`);
       }
     }
@@ -493,52 +491,60 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {pendingProducts.map((product) => (
-                  <div key={product.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-4">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{product.name}</h4>
-                        <p className="text-sm text-gray-600">by {product.seller}</p>
-                        <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-sm text-gray-500">Category: {product.category}</span>
-                          <span className="text-sm text-gray-500">Price: ₹{product.price}</span>
-                          <span className="text-sm text-gray-500">Submitted: {product.submittedDate}</span>
+              {pendingProducts.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No pending product approvals</p>
+                  <p className="text-gray-400 text-sm">New product submissions will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingProducts.map((product: any) => (
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={product.image || product.images?.[0] || 'https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=150'}
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">{product.name}</h4>
+                          <p className="text-sm text-gray-600">by {product.seller}</p>
+                          <div className="flex items-center space-x-4 mt-1">
+                            <span className="text-sm text-gray-500">Category: {product.category}</span>
+                            <span className="text-sm text-gray-500">Price: ₹{product.price}</span>
+                            <span className="text-sm text-gray-500">Submitted: {product.submittedDate}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{product.description}</p>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => handleProductAction(product.id, 'review')}
-                          className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>Review</span>
-                        </button>
-                        <button 
-                          onClick={() => handleProductAction(product.id, 'approve')}
-                          className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Approve</span>
-                        </button>
-                        <button 
-                          onClick={() => handleProductAction(product.id, 'reject')}
-                          className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1"
-                        >
-                          <XCircle className="h-4 w-4" />
-                          <span>Reject</span>
-                        </button>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => handleProductAction(product.id, 'review')}
+                            className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span>Review</span>
+                          </button>
+                          <button 
+                            onClick={() => handleProductAction(product.id, 'approve')}
+                            className="bg-green-100 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Approve</span>
+                          </button>
+                          <button 
+                            onClick={() => handleProductAction(product.id, 'reject')}
+                            className="bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-medium hover:bg-red-200 transition-colors flex items-center space-x-1"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            <span>Reject</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
